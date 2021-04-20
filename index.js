@@ -5,7 +5,7 @@ const app = express();
 const mysql = require('mysql');
 const cors = require('cors');
 const fs = require('fs');
-var favicon = require('serve-favicon');
+const favicon = require('serve-favicon');
 const https = require('https');
 const http = require('http');
 app.use(bodyParser.json());
