@@ -39,10 +39,10 @@ app.use(favicon(('logo.png')))
 // Create SQL Connection
 const pool = mysql.createPool({
     connectLimit : 10,
-    host            : '192.168.1.16',
-    user            : 'pubapi',
-    password        : '*07B291A3C469A4BA7E806505F8657482BFB002C9',
-    database        : 'public'
+    host            : '',
+    user            : '',
+    password        : '',
+    database        : ''
 });
 
 // Rate Limiting
