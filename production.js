@@ -7,49 +7,53 @@
 //                        The PlagueCraft Network, 2020-2021                         //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-// Defining modules
+// Define packages
 const express = require('express');
 const bodyParser = require('body-parser');
-const app = express();
 const mysql = require('mysql');
 const cors = require('cors');
 const fs = require('fs');
 const favicon = require('serve-favicon');
 const https = require('https');
 const http = require('http');
-const morgan = require('morgan')
+const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+
+// Define the express app
+const app = express();
+
+// Tell the app what to use
 app.use(bodyParser.json());
 app.use(cors());
 app.use(morgan('combined'))
 
-// Error Handler
-process.on('uncaughtException', (error)  => {
-    console.log('Oh my god, something terrible happened: ',  error);
+// Handle any errors
+process.on('uncaughtException', (error) => {
+    console.log('Something broke!\n ERROR: ', errors)
 })
 
-// Favicon Definition
+// Favicon
 app.get('/logo.png', (req, res) => res.status(204));
 app.use(favicon(('logo.png')))
 
-// Creating the SQL Pool
+// Create SQL Connection
 const pool = mysql.createPool({
-  connectionLimit : 10,
-  host            : '',
-  user            : '',
-  password        : '',
-  database        : ''
+    connectLimit : 10,
+    host            : '192.168.1.16',
+    user            : 'pubapi',
+    password        : '*07B291A3C469A4BA7E806505F8657482BFB002C9',
+    database        : 'public'
 });
 
 // Rate Limiting
-const req = rateLimit({                                                                                              
-  windowMs: 60 * 60 * 1000, // 1 hour window                                                                      
-  max: 100, // start blocking after 100 requests                                                                   
-  message:                                                                                                         
-    {"status": "429 TOO MANY REQUESTS", "message": "You have been rate limited."}          
-});
+const rate = rateLimit({                                                                                              
+    windowMs: 60 * 60 * 1000, // 1 hour window                                                                      
+    max: 100, // start blocking after 100 requests                                                                   
+    message:                                                                                                         
+      {"status": "429 TOO MANY REQUESTS", "message": "You have been rate limited."}          
+  });
 
-app.use(req);
+  app.use(rate);
 
 ///////////////////
 //   ENDPOINTS   //
@@ -67,18 +71,18 @@ app.get('/v0',(req, res) => {
   });
 
   // List all econ data
-app.get('/v0/smp',(req, res) => {
-  let sql = "SELECT * FROM xconomy"; // SQL Query
-  let query = pool.query(sql, (err, results) => { // Run the query
-    if(err) {
-        res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
-      } // Send an error message if it can't find what it's looking for
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Set HTTP headers
-    res.send(JSON.stringify({"status": "200 OK", "error": null, "response": results})); // String the data and display it!
+  app.get('/v0/smp',(req, res) => {
+    let sql = "SELECT * FROM xconomy"; // SQL Query
+    let query = pool.query(sql, (err, results) => { // Run the query
+      if(err) {
+          res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
+        } // Send an error message if it can't find what it's looking for
+      res.setHeader('Access-Control-Allow-Origin', '*'); // Set HTTP headers
+      res.send(JSON.stringify({"status": "200 OK", "error": null, "response": results})); // String the data and display it!
+    });
   });
-});
 
-// List only player name and bal (specifically for the PCN Bot)
+  // List only player name and bal (specifically for the PCN Bot)
 app.get('/v0/smp/bal/:id',(req, res) => {
     let sql = `SELECT balance, player FROM xconomy WHERE player = '${req.params.id}'`;
     let query = pool.query(sql, (err, results) => {
@@ -90,32 +94,32 @@ app.get('/v0/smp/bal/:id',(req, res) => {
     });
   });
 
-// List all data by player name
+  // List all data by player name
 app.get('/v0/smp/username/:id',(req, res) => {
-  let sql = `SELECT * FROM xconomy WHERE player = '${req.params.id}'`;
-  let query = pool.query(sql, (err, results) => {
-    if(err) {
-        res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
-      }
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.send(JSON.stringify({"status": "200 OK", "error": null, "response": results}));
+    let sql = `SELECT * FROM xconomy WHERE player = '${req.params.id}'`;
+    let query = pool.query(sql, (err, results) => {
+      if(err) {
+          res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
+        }
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.send(JSON.stringify({"status": "200 OK", "error": null, "response": results}));
+    });
   });
-});
 
-// List all SMP data by UUID
+  // List all SMP data by UUID
 app.get('/v0/smp/uuid/:id',(req, res) => {
-  let sql = `SELECT * FROM xconomy WHERE UID = '${req.params.id}'`;
-  let query = pool.query(sql, (err, results) => {
-    if(err) {
-        res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
-      }
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.send(JSON.stringify({"status": "200 OK", "error": null, "response": results}));
+    let sql = `SELECT * FROM xconomy WHERE UID = '${req.params.id}'`;
+    let query = pool.query(sql, (err, results) => {
+      if(err) {
+          res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
+        }
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.send(JSON.stringify({"status": "200 OK", "error": null, "response": results}));
+    });
   });
-});
 
 // List all SkyWars data
-  app.get('/v0/sw',(req, res) => {
+app.get('/v0/sw',(req, res) => {
     let sql = "SELECT * FROM sw_player";
     let query = pool.query(sql, (err, results) => {
         if(err) {
@@ -126,7 +130,7 @@ app.get('/v0/smp/uuid/:id',(req, res) => {
     });
   });
 
-  // Get SkyWars data by player name
+    // Get SkyWars data by player name
   app.get(`/v0/sw/username/:id`,(req, res) => {
     let sql = `SELECT * FROM sw_player WHERE player_name = '${req.params.id}'`;
     let query = pool.query(sql, (err, results) => {
@@ -138,33 +142,34 @@ app.get('/v0/smp/uuid/:id',(req, res) => {
     });
   });
 
-    // Get SkyWars data by UUID
-    app.get(`/v0/sw/uuid/:id`,(req, res) => {
-      let sql = `SELECT * FROM sw_player WHERE uuid = '${req.params.id}'`;
-      let query = pool.query(sql, (err, results) => {
-          if(err) {
-              res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
-            }
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.send(JSON.stringify({"status": "200 OK", "error": null, "response": results}));
+     // Get SkyWars data by UUID
+     app.get(`/v0/sw/uuid/:id`,(req, res) => {
+        let sql = `SELECT * FROM sw_player WHERE uuid = '${req.params.id}'`;
+        let query = pool.query(sql, (err, results) => {
+            if(err) {
+                res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
+              }
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.send(JSON.stringify({"status": "200 OK", "error": null, "response": results}));
+        });
       });
-    });
 
-  // Spin up a simple Express HTTP server
+/////////////////////////
+//  HTTP SERVER START  //
+/////////////////////////
+
 const httpServer = http.createServer(app);
 
-// Same as above but make it HTTPs with SSL keys
 const httpsServer = https.createServer({                                                                             
-  key: fs.readFileSync('/etc/letsencrypt/live/api.plaguecraft.xyz/privkey.pem'),                                     
-  cert: fs.readFileSync('/etc/letsencrypt/live/api.plaguecraft.xyz/fullchain.pem')                                   
-}, app); 
+    key: fs.readFileSync('/etc/letsencrypt/live/api.plaguecraft.xyz/privkey.pem'),                                     
+    cert: fs.readFileSync('/etc/letsencrypt/live/api.plaguecraft.xyz/fullchain.pem')                                   
+  }, app); 
 
 httpServer.listen(80, () => {
 });
 
 // Log the server enable
 httpsServer.listen(443, () => {                                                                                      
-  console.log('Production API now running on port 443');                                                             
-  console.log(`PCNAPI -- Production Mode Online.`);                                                                  
-})  
-
+    console.log('Production API now running on port 443');                                                             
+    console.log(`PCNAPI -- Production Mode Online.`);                                                                  
+  })  
