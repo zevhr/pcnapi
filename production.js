@@ -93,11 +93,11 @@ app.get('/v0/smp/bal',(req, res) => {
   const uuid = req.query.uuid;
 
 
-    let sql = `SELECT balance, player FROM xconomy WHERE player = '${req.query.name}'`;
+    let sql = `SELECT balance, player FROM xconomy WHERE player = '${req.query.player}'`;
     let query = pool.query(sql, (err, results) => {
-        // if(err) {
-        //     res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
-        //   }
+         if(err) {
+             res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
+           }
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.send(JSON.stringify({results}));
     });
