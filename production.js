@@ -20,6 +20,7 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const util = require('minecraft-server-util');
 const querystring = require('querystring');
+const pool = require(`./db`);
 
 // Define the express app
 const app = express();
@@ -29,6 +30,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 app.use(morgan('combined'))
+app.set('pool', pool)
 
 // Handle any errors
 process.on('uncaughtException', (error) => {
@@ -38,15 +40,6 @@ process.on('uncaughtException', (error) => {
 // Favicon
 app.get('/logo.png', (req, res) => res.status(204));
 app.use(favicon(('logo.png')))
-
-// Create SQL Connection
-const pool = mysql.createPool({
-    connectLimit : 10,
-    host            : '',
-    user            : '',
-    password        : '',
-    database        : ''
-});
 
 // Rate Limiting
 const rate = rateLimit({                                                                                              
@@ -64,17 +57,18 @@ const rate = rateLimit({
 
 // / endpoint
 app.get('/', (req, res) => {
-    res.send(JSON.stringify({"status": "OK", "author": "PCN Web Force", "api-version": "v0", "Runtime-Mode": "productionMode", "application-version": "1.0.2", "application-name": "plaguecraftnetwork.public.restlet.not-keyed"}))
+    res.send(JSON.stringify({"status": "OK", "author": "PCN Web Force", "api-version": "v1", "Runtime-Mode": "productionMode", "application-version": "1.0.6", "application-name": "plaguecraftnetwork.public.restlet.not-keyed"}))
 })
 
 // v0 Endpoint
-app.get('/v0',(req, res) => {
+app.get('/v1',(req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.send(JSON.stringify({"status": "200 OK", "message": "This is a listing of all of the PlagueCraft Network Developer API endpoints.", "ECONOMY/SMP": "/v0/smp", "SKYWARS": "/v0/sw", "STATUS": "/v0/status", "EXTERNAL-STATUS": "/v0/extstat"}));
+    res.send(JSON.stringify({"status": "200 OK", "message": "This is a listing of all of the PlagueCraft Network Developer API endpoints.", "ECONOMY/SMP": "/v1/smp", "SKYWARS": "/v1/sw", "STATUS": "/v1/status", "EXTERNAL-STATUS": "/v1/extstat"}));
   });
 
   // List all econ data
-  app.get('/v0/smp',(req, res) => {
+  app.get('/v1/smp',(req, res) => {
+    const pool = app.get('pool'); 
     let sql = "SELECT * FROM xconomy"; // SQL Query
     let query = pool.query(sql, (err, results) => { // Run the query
       if(err) {
@@ -86,7 +80,9 @@ app.get('/v0',(req, res) => {
   });
 
   // List only player name and bal (specifically for the PCN Bot)
-app.get('/v0/smp/bal',(req, res) => {
+app.get('/v1/smp/bal',(req, res) => {
+
+  const pool = app.get('pool'); 
 
   const player = req.query.player;
   const ip = req.query.ip;
@@ -104,7 +100,9 @@ app.get('/v0/smp/bal',(req, res) => {
   });
 
   // List all data by player name
-app.get('/v0/smp/username',(req, res) => {
+app.get('/v1/smp/user',(req, res) => {
+
+  const pool = app.get('pool'); 
   
   const player = req.query.player;
   const ip = req.query.ip;
@@ -121,7 +119,9 @@ app.get('/v0/smp/username',(req, res) => {
   });
 
   // List all SMP data by UUID
-app.get('/v0/smp/uuid',(req, res) => {
+app.get('/v1/smp/uuid',(req, res) => {
+
+  const pool = app.get('pool'); 
 
   const player = req.query.player;
   const ip = req.query.ip;
@@ -138,7 +138,7 @@ app.get('/v0/smp/uuid',(req, res) => {
   });
 
 // List all SkyWars data
-app.get('/v0/sw',(req, res) => {
+app.get('/v1/sw',(req, res) => {
     let sql = "SELECT * FROM sw_player";
     let query = pool.query(sql, (err, results) => {
         if(err) {
@@ -150,10 +150,12 @@ app.get('/v0/sw',(req, res) => {
   });
 
     // Get SkyWars data by player name
-  app.get(`/v0/sw/username`, (req, res) => {
+  app.get(`/v1/sw/user`, (req, res) => {
 
-    let player = req.query.player;
-    console.log(player)
+    const pool = app.get('pool'); 
+    const player = req.query.player;
+    const ip = req.query.ip;
+    const uuid = req.query.uuid;
 
     let sql = `SELECT * FROM sw_player WHERE player_name = '${player}'`;
     let query = pool.query(sql, (err, results) => {
@@ -165,7 +167,9 @@ app.get('/v0/sw',(req, res) => {
   });
 
      // Get SkyWars data by UUID
-     app.get(`/v0/sw/uuid`,(req, res) => {
+     app.get(`/v1/sw/uuid`,(req, res) => {
+
+      const pool = app.get('pool'); 
 
       const player = req.query.player;
       const ip = req.query.ip;
@@ -181,7 +185,7 @@ app.get('/v0/sw',(req, res) => {
         });
       });
 
-      app.get(`/v0/status`, (req, res) => {
+      app.get(`/v1/status`, (req, res) => {
 
         util.status('play.plaguecraft.xyz', { port: 25577, enableSRV: true, timeout: 5000, protocolVersion: 47 }) // These are the default options
     .then((response) => {
@@ -194,7 +198,7 @@ app.get('/v0/sw',(req, res) => {
     });
         });
 
-        app.get(`/v0/extstat`, (req, res) => {
+        app.get(`/v1/extstat`, (req, res) => {
 
           const player = req.query.player;
           const ip = req.query.ip;
@@ -229,4 +233,4 @@ app.get('/v0/sw',(req, res) => {
  httpsServer.listen(443, () => {                                                                                      
     console.log('Production API now running on port 443');                                                             
     console.log(`PCNAPI -- Production Mode Online.`);  
- });                                                                
+ });                                                             
