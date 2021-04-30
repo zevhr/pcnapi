@@ -69,7 +69,7 @@ app.get('/v1',(req, res) => {
   // List all econ data
   app.get('/v1/smp',(req, res) => {
     const pool = app.get('pool'); 
-    let sql = "SELECT * FROM xconomy"; // SQL Query
+    let sql = "SELECT * FROM econ_BALANCES"; // SQL Query
     let query = pool.query(sql, (err, results) => { // Run the query
       if(err) {
           res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
@@ -89,7 +89,7 @@ app.get('/v1/smp/bal',(req, res) => {
   const uuid = req.query.uuid;
 
 
-    let sql = `SELECT balance, player FROM xconomy WHERE player = '${req.query.player}'`;
+    let sql = `SELECT balance, uuid FROM econ_BALANCES WHERE uuid = '${uuid}'`;
     let query = pool.query(sql, (err, results) => {
          if(err) {
              res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
@@ -104,36 +104,15 @@ app.get('/v1/smp/user',(req, res) => {
 
   const pool = app.get('pool'); 
   
-  const player = req.query.player;
-  const ip = req.query.ip;
   const uuid = req.query.uuid;
 
-    let sql = `SELECT * FROM xconomy WHERE player = '${player}'`;
+    let sql = `SELECT * FROM econ_BALANCES WHERE uuid = '${uuid}'`;
     let query = pool.query(sql, (err, results) => {
       if(err) {
           res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
         }
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.send(JSON.stringify({"status": "200 OK", "response": results}));
-    });
-  });
-
-  // List all SMP data by UUID
-app.get('/v1/smp/uuid',(req, res) => {
-
-  const pool = app.get('pool'); 
-
-  const player = req.query.player;
-  const ip = req.query.ip;
-  const uuid = req.query.uuid;
-
-    let sql = `SELECT * FROM xconomy WHERE UID = '${uuid}'`;
-    let query = pool.query(sql, (err, results) => {
-      if(err) {
-          res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
-        }
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.send(JSON.stringify({"status": "200 OK", "error": null, "response": results}));
     });
   });
 
@@ -203,8 +182,9 @@ app.get('/v1/sw',(req, res) => {
           const player = req.query.player;
           const ip = req.query.ip;
           const uuid = req.query.uuid;
+          const port = req.query.port;
 
-          util.status(`${ip}`, { enableSRV: true, timeout: 5000, protocolVersion: 47 }) // These are the default options
+          util.status(`${ip}`, { port: port, enableSRV: true, timeout: 5000, protocolVersion: 47 }) // These are the default options
     .then((response) => {
         console.log(response);
         res.setHeader('Access-Control-Allow-Origin', '*');
@@ -221,16 +201,16 @@ app.get('/v1/sw',(req, res) => {
 
  const httpServer = http.createServer(app);
 
- const httpsServer = https.createServer({                                                                             
-    key: fs.readFileSync('/etc/letsencrypt/live/api.plaguecraft.xyz/privkey.pem'),                                     
-    cert: fs.readFileSync('/etc/letsencrypt/live/api.plaguecraft.xyz/fullchain.pem')                                   
-  }, app);
+//  const httpsServer = https.createServer({                                                                             
+//     key: fs.readFileSync('/etc/letsencrypt/live/api.plaguecraft.xyz/privkey.pem'),                                     
+//     cert: fs.readFileSync('/etc/letsencrypt/live/api.plaguecraft.xyz/fullchain.pem')                                   
+//   }, app);
 
   httpServer.listen(80, () => {
   });
 
 // Log the server enable
- httpsServer.listen(443, () => {                                                                                      
-    console.log('Production API now running on port 443');                                                             
-    console.log(`PCNAPI -- Production Mode Online.`);  
- });                                                             
+//  httpsServer.listen(443, () => {                                                                                      
+//     console.log('Production API now running on port 443');                                                             
+//     console.log(`PCNAPI -- Production Mode Online.`);  
+//  });                                                             
