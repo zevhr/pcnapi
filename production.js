@@ -21,6 +21,7 @@ const rateLimit = require('express-rate-limit');
 const util = require('minecraft-server-util');
 const querystring = require('querystring');
 const pool = require(`./db`);
+const minecraftPlayer = require('minecraft-player');
 
 // Define the express app
 const app = express();
@@ -35,6 +36,7 @@ app.set('pool', pool)
 // Handle any errors
 process.on('uncaughtException', (error) => {
     console.log('Something broke!\n ERROR: ', error)
+    res.send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
 })
 
 // Favicon
@@ -80,14 +82,13 @@ app.get('/v1',(req, res) => {
   });
 
   // List only player name and bal (specifically for the PCN Bot)
-app.get('/v1/smp/bal',(req, res) => {
+app.get('/v1/smp/bal', async (req, res) => {
 
-  const pool = app.get('pool'); 
-
+  const pool = app.get('pool');
+  
   const player = req.query.player;
-  const ip = req.query.ip;
-  const uuid = req.query.uuid;
 
+  const { uuid } = await minecraftPlayer(`${player}`); 
 
     let sql = `SELECT balance, uuid FROM econ_BALANCES WHERE uuid = '${uuid}'`;
     let query = pool.query(sql, (err, results) => {
@@ -100,11 +101,13 @@ app.get('/v1/smp/bal',(req, res) => {
   });
 
   // List all data by player name
-app.get('/v1/smp/user',(req, res) => {
+app.get('/v1/smp/user', async (req, res) => {
 
-  const pool = app.get('pool'); 
+  const pool = app.get('pool');
+
+  const player = req.query.player;
   
-  const uuid = req.query.uuid;
+  const { uuid } = await minecraftPlayer(`${player}`); 
 
     let sql = `SELECT * FROM econ_BALANCES WHERE uuid = '${uuid}'`;
     let query = pool.query(sql, (err, results) => {
@@ -184,7 +187,7 @@ app.get('/v1/sw',(req, res) => {
           const uuid = req.query.uuid;
           const port = req.query.port;
 
-          util.status(`${ip}`, { port: port, enableSRV: true, timeout: 5000, protocolVersion: 47 }) // These are the default options
+          util.status(`${ip}`, { enableSRV: true, timeout: 5000, protocolVersion: 47 }) // These are the default options
     .then((response) => {
         console.log(response);
         res.setHeader('Access-Control-Allow-Origin', '*');
