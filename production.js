@@ -22,6 +22,8 @@ const util = require('minecraft-server-util');
 const querystring = require('querystring');
 const pool = require(`./db`);
 const minecraftPlayer = require('minecraft-player');
+// const jwt = require('jsonwebtoken');
+// const dotenv = require('dotenv');
 
 // Define the express app
 const app = express();
@@ -32,6 +34,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 app.use(morgan('combined'))
 app.set('pool', pool)
+// dotenv.config();
+// process.env.TOKEN_SECRET
 
 // Handle any errors
 process.on('uncaughtException', (error) => {
@@ -53,6 +57,13 @@ const rate = rateLimit({
 
   app.use(rate);
 
+  app.use((req, res, next) => {
+    res.append('Access-Control-Allow-Origin', ['*']);
+    res.append('Access-Control-Allow-Methods', 'GET');
+    res.append('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+});
+
 ///////////////////
 //   ENDPOINTS   //
 ///////////////////
@@ -60,43 +71,19 @@ const rate = rateLimit({
 // / endpoint
 app.get('/', (req, res) => {
     res.send(JSON.stringify({"status": "OK", "author": "PCN Web Force", "api-version": "v1", "Runtime-Mode": "productionMode", "application-version": "1.0.6", "application-name": "plaguecraftnetwork.public.restlet.not-keyed"}))
-})
+});
 
 // v0 Endpoint
 app.get('/v1',(req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
     res.send(JSON.stringify({"status": "200 OK", "message": "This is a listing of all of the PlagueCraft Network Developer API endpoints.", "ECONOMY/SMP": "/v1/smp", "SKYWARS": "/v1/sw", "STATUS": "/v1/status", "EXTERNAL-STATUS": "/v1/extstat"}));
   });
 
   // List all econ data
   app.get('/v1/smp',(req, res) => {
     const pool = app.get('pool'); 
-    let sql = "SELECT * FROM econ_BALANCES"; // SQL Query
+    let sql = "SELECT uuid, balance FROM econ_BALANCES"; // SQL Query
     let query = pool.query(sql, (err, results) => { // Run the query
-      if(err) {
-          res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
-        } // Send an error message if it can't find what it's looking for
-      res.setHeader('Access-Control-Allow-Origin', '*'); // Set HTTP headers
-      res.send(JSON.stringify({"status": "200 OK", "error": null, "response": results})); // String the data and display it!
-    });
-  });
-
-  // List only player name and bal (specifically for the PCN Bot)
-app.get('/v1/smp/bal', async (req, res) => {
-
-  const pool = app.get('pool');
-  
-  const player = req.query.player;
-
-  const { uuid } = await minecraftPlayer(`${player}`); 
-
-    let sql = `SELECT balance, uuid FROM econ_BALANCES WHERE uuid = '${uuid}'`;
-    let query = pool.query(sql, (err, results) => {
-         if(err) {
-             res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
-           }
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.send(JSON.stringify({results}));
+      res.send(JSON.stringify({"status": "200 OK", "error": null,  "response": results})); // String the data and display it!
     });
   });
 
@@ -109,24 +96,22 @@ app.get('/v1/smp/user', async (req, res) => {
   
   const { uuid } = await minecraftPlayer(`${player}`); 
 
-    let sql = `SELECT * FROM econ_BALANCES WHERE uuid = '${uuid}'`;
+    let sql = `SELECT uuid, balance FROM econ_BALANCES WHERE uuid = '${uuid}'`;
     let query = pool.query(sql, (err, results) => {
       if(err) {
           res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
         }
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.send(JSON.stringify({"status": "200 OK", "response": results}));
+      res.send(JSON.stringify({"status": "200 OK", "error": null, "player": `${req.query.player}`, "response": results}));
     });
   });
 
 // List all SkyWars data
 app.get('/v1/sw',(req, res) => {
-    let sql = "SELECT * FROM sw_player";
+    let sql = "SELECT player_id, uuid, player_name, wins, losses, kills, deaths, xp FROM sw_player";
     let query = pool.query(sql, (err, results) => {
         if(err) {
             res.send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
           }
-      res.setHeader('Access-Control-Allow-Origin', '*');
       res.status(404).send(JSON.stringify({"status": "200 OK", "error": null, "response": results}));
     });
   });
@@ -136,10 +121,9 @@ app.get('/v1/sw',(req, res) => {
 
     const pool = app.get('pool'); 
     const player = req.query.player;
-    const ip = req.query.ip;
     const uuid = req.query.uuid;
 
-    let sql = `SELECT * FROM sw_player WHERE player_name = '${player}'`;
+    let sql = `SELECT player_id, uuid, player_name, wins, losses, kills, deaths, xp FROM sw_player WHERE player_name = '${player}'`;
     let query = pool.query(sql, (err, results) => {
         if(err) {
             res.send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
@@ -154,25 +138,22 @@ app.get('/v1/sw',(req, res) => {
       const pool = app.get('pool'); 
 
       const player = req.query.player;
-      const ip = req.query.ip;
       const uuid = req.query.uuid;
 
-        let sql = `SELECT * FROM sw_player WHERE uuid = '${uuid}'`;
+        let sql = `SELECT player_id, uuid, player_name, wins, losses, kills, deaths, xp FROM sw_player WHERE uuid = '${uuid}'`;
         let query = pool.query(sql, (err, results) => {
             if(err) {
                 res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
               }
-          res.setHeader('Access-Control-Allow-Origin', '*');
           res.send(JSON.stringify({"status": "200 OK", "error": null, "response": results}));
         });
       });
 
       app.get(`/v1/status`, (req, res) => {
 
-        util.status('play.plaguecraft.xyz', { port: 25577, enableSRV: true, timeout: 5000, protocolVersion: 47 }) // These are the default options
+        util.status('play.plaguecraft.xyz', { enableSRV: true, timeout: 5000, protocolVersion: 47 }) // These are the default options
     .then((response) => {
         console.log(response);
-        res.setHeader('Access-Control-Allow-Origin', '*');
           res.send(JSON.stringify({"status": "200 OK", "error": null, "response": response}));
     })
     .catch((error) => {
@@ -180,27 +161,49 @@ app.get('/v1/sw',(req, res) => {
     });
         });
 
-        app.get(`/v1/extstat`, (req, res) => {
+    //     app.get(`/v1/extstat`, (req, res) => {
+          
+    //       const ip = req.query.ip;
+    //       const port = Number(`${req.query.port}`)
 
-          const player = req.query.player;
-          const ip = req.query.ip;
-          const uuid = req.query.uuid;
-          const port = req.query.port;
+    //       util.status(`${ip}`, { port: port, enableSRV: req.query.srv, timeout: 5000, protocolVersion: 47 }) // These are the default options
+    // .then((response) => {
+    //     console.log(response);
+    //       res.send(JSON.stringify({"status": "200 OK", "error": null, "response": response}));
+    // })
+    // .catch((error) => {
+    //   res.send(JSON.stringify({"status": "200 OK", "error": 404, "response": "The server you requested is either offline or not found."}));
+    // });
+    //     })
 
-          util.status(`${ip}`, { enableSRV: true, timeout: 5000, protocolVersion: 47 }) // These are the default options
-    .then((response) => {
-        console.log(response);
-        res.setHeader('Access-Control-Allow-Origin', '*');
-          res.send(JSON.stringify({"status": "200 OK", "error": null, "response": response}));
-    })
-    .catch((error) => {
-      res.send(JSON.stringify({"status": "200 OK", "error": 404, "response": "The server you requested is either offline or not found."}));
-    });
-        })
+        /////////////////////////
+        //   ACCOUNT SYSTEM    //
+        /////////////////////////
 
-/////////////////////////
-//  HTTP SERVER START  //
-/////////////////////////
+        // function generateAccessToken(username) {
+        //   return jwt.sign(username, process.env.TOKEN_SECRET, { expiresIn: '1800s' });
+        // }
+
+        // app.post('/v1/create', (req, res) => {
+        //   // ...
+        
+        //   const token = generateAccessToken({ username: req.body.username });
+        //   res.json(token);
+        
+        //   // ...
+        // });
+
+
+
+
+
+
+
+
+
+            /////////////////////////
+            //  HTTP SERVER START  //
+            /////////////////////////
 
  const httpServer = http.createServer(app);
 
