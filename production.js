@@ -22,8 +22,6 @@ const util = require('minecraft-server-util');
 const querystring = require('querystring');
 const pool = require(`./db`);
 const minecraftPlayer = require('minecraft-player');
-// const jwt = require('jsonwebtoken');
-// const dotenv = require('dotenv');
 
 // Define the express app
 const app = express();
@@ -34,8 +32,6 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 app.use(morgan('combined'))
 app.set('pool', pool)
-// dotenv.config();
-// process.env.TOKEN_SECRET
 
 // Handle any errors
 process.on('uncaughtException', (error) => {
@@ -70,12 +66,12 @@ const rate = rateLimit({
 
 // / endpoint
 app.get('/', (req, res) => {
-    res.send(JSON.stringify({"status": "OK", "author": "PCN Web Force", "api-version": "v1", "Runtime-Mode": "productionMode", "application-version": "1.0.6", "application-name": "plaguecraftnetwork.public.restlet.not-keyed"}))
+    res.send(JSON.stringify({"status": "OK", "author": "PCN Web Force", "api-version": "v1", "Runtime-Mode": "productionMode", "application-version": "1.0.8", "application-name": "plaguecraftnetwork.public.restlet.not-keyed"}))
 });
 
 // v0 Endpoint
 app.get('/v1',(req, res) => {
-    res.send(JSON.stringify({"status": "200 OK", "message": "This is a listing of all of the PlagueCraft Network Developer API endpoints.", "ECONOMY/SMP": "/v1/smp", "SKYWARS": "/v1/sw", "STATUS": "/v1/status", "EXTERNAL-STATUS": "/v1/extstat"}));
+    res.send(JSON.stringify({"status": "200 OK", "message": "This is a listing of all of the PlagueCraft Network Developer API endpoints.", "ECONOMY/SMP": "/v1/smp", "SKYWARS": "/v1/sw", "STATUS": "/v1/status"}));
   });
 
   // List all econ data
@@ -95,6 +91,22 @@ app.get('/v1/smp/user', async (req, res) => {
   const player = req.query.player;
   
   const { uuid } = await minecraftPlayer(`${player}`); 
+
+    let sql = `SELECT uuid, balance FROM econ_BALANCES WHERE uuid = '${uuid}'`;
+    let query = pool.query(sql, (err, results) => {
+      if(err) {
+          res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
+        }
+      res.send(JSON.stringify({"status": "200 OK", "error": null, "player": `${req.query.player}`, "response": results}));
+    });
+  });
+
+    // List all data by player name
+app.get('/v1/smp/uuid', async (req, res) => {
+
+  const pool = app.get('pool');
+
+  const uuid = req.query.uuid;
 
     let sql = `SELECT uuid, balance FROM econ_BALANCES WHERE uuid = '${uuid}'`;
     let query = pool.query(sql, (err, results) => {
@@ -161,62 +173,12 @@ app.get('/v1/sw',(req, res) => {
     });
         });
 
-    //     app.get(`/v1/extstat`, (req, res) => {
-          
-    //       const ip = req.query.ip;
-    //       const port = Number(`${req.query.port}`)
-
-    //       util.status(`${ip}`, { port: port, enableSRV: req.query.srv, timeout: 5000, protocolVersion: 47 }) // These are the default options
-    // .then((response) => {
-    //     console.log(response);
-    //       res.send(JSON.stringify({"status": "200 OK", "error": null, "response": response}));
-    // })
-    // .catch((error) => {
-    //   res.send(JSON.stringify({"status": "200 OK", "error": 404, "response": "The server you requested is either offline or not found."}));
-    // });
-    //     })
-
-        /////////////////////////
-        //   ACCOUNT SYSTEM    //
-        /////////////////////////
-
-        // function generateAccessToken(username) {
-        //   return jwt.sign(username, process.env.TOKEN_SECRET, { expiresIn: '1800s' });
-        // }
-
-        // app.post('/v1/create', (req, res) => {
-        //   // ...
-        
-        //   const token = generateAccessToken({ username: req.body.username });
-        //   res.json(token);
-        
-        //   // ...
-        // });
-
-
-
-
-
-
-
-
-
             /////////////////////////
             //  HTTP SERVER START  //
             /////////////////////////
 
  const httpServer = http.createServer(app);
 
-//  const httpsServer = https.createServer({                                                                             
-//     key: fs.readFileSync('/etc/letsencrypt/live/api.plaguecraft.xyz/privkey.pem'),                                     
-//     cert: fs.readFileSync('/etc/letsencrypt/live/api.plaguecraft.xyz/fullchain.pem')                                   
-//   }, app);
-
-  httpServer.listen(80, () => {
-  });
-
-// Log the server enable
-//  httpsServer.listen(443, () => {                                                                                      
-//     console.log('Production API now running on port 443');                                                             
-//     console.log(`PCNAPI -- Production Mode Online.`);  
-//  });                                                             
+  httpServer.listen(1337, () => {
+    console.log('Done!');
+  });                                                           
