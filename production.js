@@ -77,7 +77,7 @@ app.get('/v1',(req, res) => {
   // List all econ data
   app.get('/v1/smp',(req, res) => {
     const pool = app.get('pool'); 
-    let sql = "SELECT uuid, balance FROM econ_BALANCES"; // SQL Query
+    let sql = "SELECT * FROM playerbank"; // SQL Query
     let query = pool.query(sql, (err, results) => { // Run the query
       res.send(JSON.stringify({"status": "200 OK", "error": null,  "response": results})); // String the data and display it!
     });
@@ -92,7 +92,7 @@ app.get('/v1/smp/user', async (req, res) => {
   
   const { uuid } = await minecraftPlayer(`${player}`); 
 
-    let sql = `SELECT uuid, balance FROM econ_BALANCES WHERE uuid = '${uuid}'`;
+    let sql = `SELECT NAME, MONEY FROM playerbank WHERE NAME = '${player}'`;
     let query = pool.query(sql, (err, results) => {
       if(err) {
           res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
@@ -108,12 +108,28 @@ app.get('/v1/smp/uuid', async (req, res) => {
 
   const uuid = req.query.uuid;
 
-    let sql = `SELECT uuid, balance FROM econ_BALANCES WHERE uuid = '${uuid}'`;
+    let sql = `SELECT NAME, MONEY FROM playerbank WHERE uuid = '${uuid}'`;
     let query = pool.query(sql, (err, results) => {
       if(err) {
           res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
         }
       res.send(JSON.stringify({"status": "200 OK", "error": null, "player": `${req.query.player}`, "response": results}));
+    });
+  });
+
+      // List all data by player name
+app.get('/v1/smp/limit', async (req, res) => {
+
+  const pool = app.get('pool');
+
+  const limit = req.query.limitby;
+
+    let sql = `SELECT ${limit} FROM playerbank`;
+    let query = pool.query(sql, (err, results) => {
+      if(err) {
+          res.status(404).send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
+        }
+      res.send(JSON.stringify({results}));
     });
   });
 
