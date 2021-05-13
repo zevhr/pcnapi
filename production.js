@@ -133,6 +133,38 @@ app.get('/v1/smp/limit', async (req, res) => {
     });
   });
 
+  // Get SMP - Skills data by player name
+  app.get(`/v1/smp/skills`, (req, res) => {
+
+    const pool = app.get('pool'); 
+    const player = req.query.player;
+    const uuid = req.query.uuid;
+
+    let sql = `SELECT * FROM SkillData`;
+    let query = pool.query(sql, (err, results) => {
+        if(err) {
+            res.send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
+          }
+      res.send(JSON.stringify({"status": "200 OK", "error": null, "response": results}));
+    });
+  });
+
+    // Get SMP - Skills data by player name
+    app.get(`/v1/smp/skills/user`, (req, res) => {
+
+      const pool = app.get('pool'); 
+      const player = req.query.player;
+      const uuid = req.query.uuid;
+  
+      let sql = `SELECT * FROM SkillData WHERE NAME = '${player}'`;
+      let query = pool.query(sql, (err, results) => {
+          if(err) {
+              res.send(JSON.stringify({"status": "200 OK", "error": "404 NOT FOUND", "message": "The requested resource was not found. If you expected something to be here, contact the owner of the application (PCN)"}));
+            }
+        res.send(JSON.stringify({"status": "200 OK", "error": null, "response": results}));
+      });
+    });
+
 // List all SkyWars data
 app.get('/v1/sw',(req, res) => {
     let sql = "SELECT player_id, uuid, player_name, wins, losses, kills, deaths, xp FROM sw_player";
