@@ -19,7 +19,7 @@ const https = require('https');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const util = require('minecraft-server-util');
-const pool = require(`./js-modules/db`);
+const pool = require(`../vars/db`);
 const rate = require(`./js-modules/ratelimiter`)
 const minecraftPlayer = require('minecraft-player');
 
