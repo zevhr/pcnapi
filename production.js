@@ -19,7 +19,7 @@ const https = require('https');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const util = require('minecraft-server-util');
-const pool = require(`../js-modules/db`);
+const pool = require(`./js-modules/db`);
 const rate = require(`./js-modules/ratelimiter`)
 const minecraftPlayer = require('minecraft-player');
 
@@ -38,14 +38,12 @@ app.get('logo.png', (req, res) => res.status(204));
 app.use(favicon(('logo.png')));
 app.use(rate);
 
-
-
 ///////////////////
 //   ENDPOINTS   //
 ///////////////////
 // No-path endpoint
 app.get('/', (req, res) => {
-    res.send(JSON.stringify({"status": "OK", "author": "PCN Web Force", "api-version": "v2", "Runtime-Mode": "productionMode", "application-version": "stable-2.0.0", "application-name": "plaguecraftnetwork.public.restlet.not-keyed"}))
+    res.send(JSON.stringify({"status": "OK", "author": "PCN Web Force", "api-version": "v2", "Runtime-Mode": "productionMode", "application-version": "stable-2.0.1", "application-name": "plaguecraftnetwork.public.restlet.not-keyed"}))
 });
 
 // v2 Endpoint
@@ -54,53 +52,50 @@ app.get('/v2',(req, res) => {
   });
 
   // Economy Endpoint
-  app.get('/v2/smp/econ', (req, res) => {
+  app.get('/v2/smp/econ', async (req, res) => {
+    const player = req.query.player;
+    if(player) {
       const pool = app.get('pool');
+      const player = req.query.player;
+      const { uuid } = await minecraftPlayer(`${player}`); 
       try {
-        let sql = "SELECT uuid, balance FROM TNE_BALANCES"; // SQL Query
+        let sql = `SELECT uuid, balance FROM TNE_BALANCES WHERE uuid = '${uuid}'`; // SQL Query
         let query = pool.query(sql, (err, results) => { // Run the query
           res.send(JSON.stringify({"status": "200 OK", "error": null,  "response": results})); // String the data and display it!
         });
       }
       catch (error) {
         res.status(404).send(JSON.stringify({"status": 404, "message": "You've hit a 404! Please try again later or contact the PCN Web Force if you think this is inaccurate."}))
+        }
+    } else if (!player) {
+      const pool = app.get('pool');
+      try {
+        let sql = `SELECT uuid, balance FROM TNE_BALANCES`; // SQL Query
+        let query = pool.query(sql, (err, results) => { // Run the query
+          res.send(JSON.stringify({"status": "200 OK", "error": null,  "response": results})); // String the data and display it!
+        });
       }
+      catch (error) {
+        res.status(404).send(JSON.stringify({"status": 404, "message": "You've hit a 404! Please try again later or contact the PCN Web Force if you think this is inaccurate."}))
+        }
+    }
   });
-
-  // Economy Endpoint - User Lookup
-  app.get('/v2/smp/econ/user', async (req, res) => {
-    const pool = app.get('pool');
-    const player = req.query.player;
-    const { uuid } = await minecraftPlayer(`${player}`); 
-    try {
-      let sql = `SELECT uuid, balance FROM TNE_BALANCES WHERE uuid = '${uuid}'`; // SQL Query
-      let query = pool.query(sql, (err, results) => { // Run the query
-        res.send(JSON.stringify({"status": "200 OK", "error": null,  "response": results})); // String the data and display it!
-      });
-    }
-    catch (error) {
-      res.status(404).send(JSON.stringify({"status": 404, "message": "You've hit a 404! Please try again later or contact the PCN Web Force if you think this is inaccurate."}))
-    }
-});
-
-// Economy Endpoint - UUID lookup  
-app.get('/v2/smp/econ/uuid', async (req, res) => {
-    const pool = app.get('pool');
-    const uuid = req.query.uuid;
-    const { username } = await minecraftPlayer(`${uuid}`); 
-    try {
-      let sql = `SELECT uuid, balance FROM TNE_BALANCES WHERE uuid = '${uuid}'`; // SQL Query
-      let query = pool.query(sql, (err, results) => { // Run the query
-        res.send(JSON.stringify({"status": "200 OK", "error": null, "player": `${username}`, "response": results})); // String the data and display it!
-      });
-    }
-    catch (error) {
-      res.status(404).send(JSON.stringify({"status": 404, "message": "You've hit a 404! Please try again later or contact the PCN Web Force if you think this is inaccurate."}))
-    }
-});
 
     // Skills endpoint
   app.get('/v2/smp/skills', async (req, res) => {
+    const player = req.query.player
+    if(player) {
+      const pool = app.get('pool');
+      try { 
+        let sql = `SELECT * FROM SkillData WHERE NAME = '${player}'`;
+        let query = pool.query(sql, (err, results) => {
+        res.send(JSON.stringify({"status": "200 OK", "error": null, "response": results}));
+    });
+      }
+      catch (error) {
+        res.status(404).send(JSON.stringify({"status": 404, "message": "You've hit a 404! Please try again later or contact the PCN Web Force if you think this is inaccurate."}))
+      }
+    } else if (!player) {
       const pool = app.get('pool');
       try { 
         let sql = `SELECT * FROM SkillData`;
@@ -111,41 +106,24 @@ app.get('/v2/smp/econ/uuid', async (req, res) => {
       catch (error) {
         res.status(404).send(JSON.stringify({"status": 404, "message": "You've hit a 404! Please try again later or contact the PCN Web Force if you think this is inaccurate."}))
       }
+    }
   })
-
-  // Skills endpoint - User Lookup
-  app.get('/v2/smp/skills/user', async (req, res) => {
-    const pool = app.get('pool');
-    const player = req.query.player;
-    try { 
-      let sql = `SELECT * FROM SkillData WHERE NAME = '${player}'`;
-      let query = pool.query(sql, (err, results) => {
-      res.send(JSON.stringify({"status": "200 OK", "error": null, "response": results}));
-  });
-    }
-    catch (error) {
-      res.status(404).send(JSON.stringify({"status": 404, "message": "You've hit a 404! Please try again later or contact the PCN Web Force if you think this is inaccurate."}))
-    }
-})
-
-        // Skills endpoint - UUID Lookup
-    app.get('/v2/smp/skills/uuid', async (req, res) => {
-        const pool = app.get('pool');
-        const uuid = req.query.uuid;
-        const { username } = await minecraftPlayer(`${uuid}`)
-        try { 
-        let sql = `SELECT * FROM SkillData WHERE ID = '${uuid}'`;
-        let query = pool.query(sql, (err, results) => {
-        res.send(JSON.stringify({"status": "200 OK", "error": null, "player": `${username}`, "response": results}));
-    });
-        }
-        catch (error) {
-        res.status(404).send(JSON.stringify({"status": 404, "message": "You've hit a 404! Please try again later or contact the PCN Web Force if you think this is inaccurate."}))
-        }
-})
 
     // SkyWars Endpoint
   app.get('/v2/sw', async (req, res) => {
+    const player = req.query.player;
+    if(player) {
+      const pool = app.get('pool');
+      try {
+        let sql = `SELECT player_id, uuid, player_name, wins, losses, kills, deaths, xp FROM sw_player WHERE player_name = '${[player]}'`;
+        let query = pool.query(sql, (err, results) => {
+        res.send(JSON.stringify({"status": "200 OK", "error": null, "response": results}));
+    });
+      }
+      catch (error) {
+        res.status(404).send(JSON.stringify({"status": 404, "message": "You've hit a 404! Please try again later or contact the PCN Web Force if you think this is inaccurate."}))
+      }
+    } else if (!player) {
       const pool = app.get('pool');
       try {
         let sql = "SELECT player_id, uuid, player_name, wins, losses, kills, deaths, xp FROM sw_player";
@@ -156,36 +134,6 @@ app.get('/v2/smp/econ/uuid', async (req, res) => {
       catch (error) {
         res.status(404).send(JSON.stringify({"status": 404, "message": "You've hit a 404! Please try again later or contact the PCN Web Force if you think this is inaccurate."}))
       }
-  })
-
-  // SkyWars Endpoint - User Lookup
-  app.get('/v2/sw/user', async (req, res) => {
-    const pool = app.get('pool');
-    const player = req.query.player;
-    try {
-      let sql = `SELECT player_id, uuid, player_name, wins, losses, kills, deaths, xp FROM sw_player WHERE player_name = '${player}'`;
-      let query = pool.query(sql, (err, results) => {
-      res.send(JSON.stringify({"status": "200 OK", "error": null, "response": results}));
-  });
-    }
-    catch (error) {
-        res.status(404).send(JSON.stringify({"status": 404, "message": "You've hit a 404! Please try again later or contact the PCN Web Force if you think this is inaccurate."}))
-    }
-})
-
-    // SkyWars Endpoint - UUID Lookup
-  app.get('/v2/sw/uuid', async (req, res) => {
-    const pool = app.get('pool');
-    const uuid = req.query.uuid;
-    const {username} = await minecraftPlayer(`${uuid}`);
-    try {
-        let sql = `SELECT player_id, uuid, player_name, wins, losses, kills, deaths, xp FROM sw_player WHERE uuid = '${uuid}'`;
-        let query = pool.query(sql, (err, results) => {
-          res.send(JSON.stringify({"status": "200 OK", "error": null, "player": `${username}`, "response": results}));
-        });
-    }
-    catch (error) {
-        res.status(404).send(JSON.stringify({"status": 404, "message": "You've hit a 404! Please try again later or contact the PCN Web Force if you think this is inaccurate."}))
     }
   })
 
