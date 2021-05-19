@@ -110,12 +110,12 @@ app.get('/v2',(req, res) => {
   })
 
     // SkyWars Endpoint
-  app.get('/v2/sw', async (req, res) => {
+  app.get('/v2/pvp/sw', async (req, res) => {
     const player = req.query.player;
     if(player) {
       const pool = app.get('pool');
       try {
-        let sql = `SELECT player_id, uuid, player_name, wins, losses, kills, deaths, xp FROM sw_player WHERE player_name = '${[player]}'`;
+        let sql = `SELECT player_id, uuid, player_name, wins, losses, kills, deaths, xp FROM sw_player WHERE player_name = '${player}'`;
         let query = pool.query(sql, (err, results) => {
         res.send(JSON.stringify({"status": "200 OK", "error": null, "response": results}));
     });
@@ -136,6 +136,34 @@ app.get('/v2',(req, res) => {
       }
     }
   })
+
+      // SkyWars Endpoint
+      app.get('/v2/pvp/bridges', async (req, res) => {
+        const player = req.query.player;
+        if(player) {
+          const pool = app.get('pool');
+          try {
+            let sql = `SELECT * FROM thebridge_stats WHERE name = '${player}'`;
+            let query = pool.query(sql, (err, results) => {
+            res.send(JSON.stringify({"status": "200 OK", "error": null, "response": results}));
+        });
+          }
+          catch (error) {
+            res.status(404).send(JSON.stringify({"status": 404, "message": "You've hit a 404! Please try again later or contact the PCN Web Force if you think this is inaccurate."}))
+          }
+        } else if (!player) {
+          const pool = app.get('pool');
+          try {
+            let sql = "SELECT * FROM thebridge_stats";
+            let query = pool.query(sql, (err, results) => {
+            res.send(JSON.stringify({"status": "200 OK", "error": null, "response": results}));
+        });
+          }
+          catch (error) {
+            res.status(404).send(JSON.stringify({"status": 404, "message": "You've hit a 404! Please try again later or contact the PCN Web Force if you think this is inaccurate."}))
+          }
+        }
+      })
 
     // Status Endpoint
   app.get(`/v2/status`, (req, res) => {
