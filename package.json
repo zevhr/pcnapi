@@ -25,6 +25,7 @@
     "minecraft-server-util": "^3.5.1",
     "morgan": "^1.10.0",
     "mysql": "^2.18.1",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.1",
+    "pg": "^8.7.1"
   }
 }

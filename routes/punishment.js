@@ -1,8 +1,16 @@
 const express = require('express');
 const fetch = require('node-fetch');
+const { Client, Pool } = require('pg');
+const config = require('../config.json');
 const router = express.Router();
 
-const { bansPool } = require('../js-modules/db');
+const pool = new Pool({
+    user: config.databases.usernames.bansdatabase_username,
+    password: config.databases.passwords.bansdatabase_password,
+    host: '192.168.1.16',
+    port: '5432',
+    database: 'bans',
+});
 
 router.get('/:user/:type', async (req, res) => {
     const type = req.params.type
@@ -20,92 +28,55 @@ router.get('/:user/:type', async (req, res) => {
         ]})
     } else {
         if(type === `kicks`) {
-            try {
-                var { uuid } = await fetch(`https://api.ashcon.app/mojang/v2/user/${req.params.user}`).then(response => response.json());
-
-                if(!uuid) {
-                    return res.status(404).send({ "status": 404, "message": "That user doesn't exist on Minecraft." })
+            var { uuid } = await fetch(`https://api.ashcon.app/mojang/v2/user/${req.params.user}`).then(response => response.json());
+            pool.query(`SELECT * FROM litebans_kicks WHERE uuid='${uuid}'`, (err, result) => {
+                if(err) {
+                    console.log(error)
+                    return res.status(500).send({ "status": 500, "message": "Something internally went wrong. Let the developers (Awex) know." })
+                } else if (!result.rows[0]) {
+                    return res.status(404).send({ "status": 404, "message": "User has not been kicked before."})
+                } else {
+                    return res.send({
+                        "uuid": result.rows[0].uuid,
+                        "reason": result.rows[0].reason,
+                        "kickedBy": result.rows[0].banned_by_name,
+                        "until": result.rows[0].until
+                     })
                 }
-
-                bansPool.query(`SELECT * FROM litebans_kicks WHERE uuid=?`, uuid, async (error, row) => {
-                    if(error) {
-                        console.log(error)
-                        return res.status(500).send({ "status": 500, "message": "Something internally went wrong. Let the developers (Awex) know." })
-                    } else {
-                        var data = row[Object.keys(row).sort().pop()];
-
-                        if(!data) {
-                            return res.status(404).send({ "status": 404, "message": "User has not been kicked before."})
-                        } else {
-                            return res.send({
-                                "uuid": uuid,
-                                "reason": data.reason,
-                                "kickedBy": data.banned_by_name,
-                                "until": data.until
-                             })
-                        }
-                    }
-                })
-            } catch (err) {
-                console.log(err)
-                return res.status(500).send({ "status": 500, "message": "Something internally went wrong. Let the developers (Awex) know."})
-            }
+            })
         } else if (type === 'bans') {
-            try {
-                var { uuid } = await fetch(`https://api.ashcon.app/mojang/v2/user/${req.params.user}`).then(response => response.json());
-
-                if(!uuid) {
-                    return res.status(404).send({ "status": 404, "message": "That user doesn't exist on Minecraft." })
+            var { uuid } = await fetch(`https://api.ashcon.app/mojang/v2/user/${req.params.user}`).then(response => response.json());
+            pool.query(`SELECT * FROM litebans_bans WHERE uuid='${uuid}'`, (err, result) => {
+                if(err) {
+                    console.log(err)
+                    return res.status(500).send({ "status": 500, "message": "Something internally went wrong. Let the developers (Awex) know." })
+                } else if (!result.rows[0]) {
+                    return res.status(404).send({ "status": 404, "message": "User has not been banned before."})
+                } else {
+                    return res.send({
+                        "uuid": result.rows[0].uuid,
+                        "reason": result.rows[0].reason,
+                        "kickedBy": result.rows[0].banned_by_name,
+                        "until": result.rows[0].until
+                     })
                 }
-
-                bansPool.query(`SELECT * FROM litebans_bans WHERE uuid=?`, uuid, async (error, row) => {
-                    if(error) {
-                        console.log(error)
-                        return res.status(500).send({ "status": 500, "message": "Something internally went wrong. Let the developers (Awex) know." })
-                    } else {
-                        var data = row[Object.keys(row).sort().pop()];
-
-                        if(!data) {
-                            return res.status(404).send({ "status": 404, "message": "User has not been banned before."})
-                        } else {
-                            return res.send({
-                                "uuid": uuid,
-                                "reason": data.reason,
-                                "bannedBy": data.banned_by_name,
-                                "until": data.until
-                             })
-                        }
-                    }
-                })
-            } catch (err) {
-                console.log(err)
-                return res.status(500).send({ "status": 500, "message": "Something internally went wrong. Let the developers (Awex) know."})
-            }
+            })
         } else if (type === 'warns') {
             try {
                 var { uuid } = await fetch(`https://api.ashcon.app/mojang/v2/user/${req.params.user}`).then(response => response.json());
-
-                if(!uuid) {
-                    return res.status(404).send({ "status": 404, "message": "That user doesn't exist on Minecraft." })
-                }
-
-                bansPool.query(`SELECT * FROM litebans_warnings WHERE uuid=?`, uuid, async (error, row) => {
-                    if(error) {
-                        console.log(error)
+                pool.query(`SELECT * FROM litebans_warnings WHERE uuid='${uuid}'`, (err, result) => {
+                    if(err) {
+                        console.log(err)
                         return res.status(500).send({ "status": 500, "message": "Something internally went wrong. Let the developers (Awex) know." })
+                    } else if (!result.rows[0]) {
+                        return res.status(404).send({ "status": 404, "message": "User has not been warned before."})
                     } else {
-                        var data = row[Object.keys(row).sort().pop()];
-
-                        if(!data) {
-                            return res.status(404).send({ "status": 404, "message": "User has not been warned before."})
-                        } else {
-                            return res.send({
-                                "uuid": uuid,
-                                "reason": data.reason,
-                                "warnedBy": data.banned_by_name,
-                                "until": data.until
-                             })
-                        }
+                        return res.send({
+                            "uuid": result.rows[0].uuid,
+                            "reason": result.rows[0].reason,
+                            "kickedBy": result.rows[0].banned_by_name,
+                            "until": result.rows[0].until
+                         })
                     }
                 })
             } catch (err) {
@@ -113,36 +84,22 @@ router.get('/:user/:type', async (req, res) => {
                 return res.status(500).send({ "status": 500, "message": "Something internally went wrong. Let the developers (Awex) know."})
             }
         } else if (type === 'mutes') {
-            try {
-                var { uuid } = await fetch(`https://api.ashcon.app/mojang/v2/user/${req.params.user}`).then(response => response.json());
-
-                if(!uuid) {
-                    return res.status(404).send({ "status": 404, "message": "That user doesn't exist on Minecraft." })
+            var { uuid } = await fetch(`https://api.ashcon.app/mojang/v2/user/${req.params.user}`).then(response => response.json());
+            pool.query(`SELECT * FROM litebans_mutes WHERE uuid='${uuid}'`, (err, result) => {
+                if(err) {
+                    console.log(err)
+                    return res.status(500).send({ "status": 500, "message": "Something internally went wrong. Let the developers (Awex) know." })
+                } else if (!result.rows[0]) {
+                    return res.status(404).send({ "status": 404, "message": "User has not been muted before."})
+                } else {
+                    return res.send({
+                        "uuid": result.rows[0].uuid,
+                        "reason": result.rows[0].reason,
+                        "kickedBy": result.rows[0].banned_by_name,
+                        "until": result.rows[0].until
+                     })
                 }
-
-                bansPool.query(`SELECT * FROM litebans_mutes WHERE uuid=?`, uuid, async (error, row) => {
-                    if(error) {
-                        console.log(error)
-                        return res.status(500).send({ "status": 500, "message": "Something internally went wrong. Let the developers (Awex) know." })
-                    } else {
-                        var data = row[Object.keys(row).sort().pop()];
-
-                        if(!data) {
-                            return res.status(404).send({ "status": 404, "message": "User has not been muted before."})
-                        } else {
-                            return res.send({
-                                "uuid": uuid,
-                                "reason": data.reason,
-                                "mutedBy": data.banned_by_name,
-                                "until": data.until
-                             })
-                        }
-                    }
-                })
-            } catch (err) {
-                console.log(err)
-                return res.status(500).send({ "status": 500, "message": "Something internally went wrong. Let the developers (Awex) know."})
-            }
+            })
         }
     }
 })
