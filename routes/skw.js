@@ -8,13 +8,14 @@ router.get('/:user', (req, res) => {
 
     try {
         swPool.query('SELECT * FROM sw_player WHERE player_name=?', user, (error, row) => {
-            var data = JSON.parse(JSON.stringify(row[0]));
+            console.log(row)
             if(error) {
                 console.log(error)
                 return res.status(500).send({ "status": 500, "message": "Something internally went wrong. Let the developers (Awex) know."})
-            } else if(!data) {
+            } else if(!row[0]) {
                 return res.status(404).send({ "status": 404, "message": "That user has never played before."})
             } else {
+                var data = JSON.parse(JSON.stringify(row[0]));
                 return res.status(200).send({ 
                     "player_name": user,
                     "wins": data.wins,
