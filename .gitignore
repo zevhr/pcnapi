@@ -2,3 +2,4 @@ node_modules
 modules/db.js
 .env
 autodeploy.js
+images
