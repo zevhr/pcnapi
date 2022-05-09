@@ -86,7 +86,7 @@ router.get('/:user/image', async (req, res) => {
     fs.writeFileSync('./images/image.png', buffer);
 
     res.type='image/png';
-    res.sendFile(path.join(__dirname, '../images/image.png'));
+    res.sendFile(path.join(__dirname, `../images/${req.user.params}.png`));
 })
 
 module.exports = router;
