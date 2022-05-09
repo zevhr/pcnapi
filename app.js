@@ -10,6 +10,7 @@
 // Defining packages required for this app
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 
@@ -24,6 +25,8 @@ const rate = rateLimit({
 const app = express();
 
 // App.use statements
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 app.use(express.json());
 app.use(cors());
 app.use(morgan('combined'))
