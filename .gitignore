@@ -1,4 +1,4 @@
 node_modules
-js-modules/db.js
+modules/db.js
 .env
 autodeploy.js

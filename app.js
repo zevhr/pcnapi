@@ -4,13 +4,12 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 // This project has been built by me as a part of the PlagueCraft Network Web Force. //
 // It is licensed under the MIT Open-Source License. Check out LICENSE to read more. //
-//                        The PlagueCraft Network, 2020-2021                         //
+//                        The PlagueCraft Network, 2020-2022                         //
 ///////////////////////////////////////////////////////////////////////////////////////
  
 // Defining packages required for this app
 const express = require('express');
 const cors = require('cors');
-const fs = require('fs');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 
@@ -34,11 +33,12 @@ app.use(rate);
 //   ENDPOINTS   //
 ///////////////////
 
-const skywarsEp = require('./routes/skw');
-const punishmentEp = require('./routes/punishment');
+app.get('/', (req, res) => {
+  return res.status(200).json({"status":200,"message":"PlagueCraft Network REST API"});
+});
 
-app.use('/v0/punishment/', punishmentEp);
-app.use('/v0/skywars/', skywarsEp)
+app.use('/v0/bridges/', require('./routes/bridge'));
+app.use('/v0/tntrun/', require('./routes/tntrun'));
 
 /////////////////////////
 //  HTTP SERVER START  //
