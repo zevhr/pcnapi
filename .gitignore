@@ -1,5 +1,5 @@
 node_modules
 modules/db.js
-.env
+config.json
 autodeploy.js
 images
