@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../modules/db');
 const fs = require('fs');
 const path = require('path');
+const fetch = require('node-fetch');
 
 // Canvas
 const { createCanvas, loadImage } = require('canvas')
@@ -16,14 +17,13 @@ router.get('/:user', async (req, res) => {
     const data = await db("SELECT * FROM bridges WHERE player=?", [req.params.user]);
     const itemData = await db("SELECT * FROM bridgesItems where player=?", [req.params.user]);
 
-    if(!data) {
-        res.type='image/png';
-        return res.sendFile(path.join(__dirname, `../images/default.png`));
-    } else {
+    if(!data) return res.status(404).json({"status":404,"message":"Player not found in database"});
+    else {
         const obj = {
             "status": 200,
             "data": {
                 "name": data.player,
+                "kills": data.kills,
                 "points": data.points,
             }
         }
@@ -44,7 +44,7 @@ router.get('/:user', async (req, res) => {
 router.get('/:user/image', async (req, res) => {
     const data = await db("SELECT * FROM bridges where player=?", [req.params.user]);
     const itemData = await db("SELECT * FROM bridgesItems where player=?", [req.params.user]);
-    if(!itemData && !data) return res.status(404).json({"status":404,"message":"Player not found in database"});
+    if(!data) return res.status(404).json({"status":404,"message":"Player not found in database"});
 
     const images = [];
     images.push(await loadImage(path.resolve(__dirname, '../images/hotbar.png')));
@@ -68,28 +68,28 @@ router.get('/:user/image', async (req, res) => {
     }
 
     // Sword
-    context.drawImage(images[1], x[itemData.sword], 90, 50, 50);
+    context.drawImage(images[1], x[itemData.sword], 92, 50, 50);
 
     // Concrete 1
-    context.drawImage(images[2], x[itemData.concrete1], 90, 50, 50);
+    context.drawImage(images[2], x[itemData.concrete1], 92, 50, 50);
 
     // Concrete 2
-    context.drawImage(images[2], x[itemData.concrete2], 90, 50, 50);
+    context.drawImage(images[2], x[itemData.concrete2], 92, 50, 50);
 
     // Bow
-    context.drawImage(images[3], x[itemData.bow], 90, 50, 50);
+    context.drawImage(images[3], x[itemData.bow], 92, 50, 50);
 
     // Gapple
-    context.drawImage(images[4], x[itemData.gap], 90, 50, 50);
+    context.drawImage(images[4], x[itemData.gap], 92, 50, 50);
 
     // Pickaxe
-    context.drawImage(images[5], x[itemData.pickaxe], 90, 50, 50);
+    context.drawImage(images[5], x[itemData.pickaxe], 92, 50, 50);
 
     const buffer = canvas.toBuffer('image/png');
-    fs.writeFileSync(`./images/${req.params.user}.png`, buffer);
+    fs.writeFileSync(`./images/${req.params.user.toLowerCase()}.png`, buffer);
 
     res.type='image/png';
-    res.sendFile(path.join(__dirname, `../images/${req.params.user}.png`));
+    res.sendFile(path.join(__dirname, `../images/${req.params.user.toLowerCase()}.png`));
 })
 
 router.get('/:user/source', async (req, res) => {
