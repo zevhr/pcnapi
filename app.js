@@ -13,6 +13,8 @@ const cors = require('cors');
 const path = require('path');
 const rateLimit = require('express-rate-limit');
 
+const hahaFunnyUrl = ['/.env', '/core/.env', '/app/.env', '/public/.env', '/vendor/.env', '/laravel/.env', '/database/.env', '/db/.env', '/opt/.env']
+
 const rate = rateLimit({                                                                                              
   windowMs: 60 * 60 * 1000,                                                                  
   max: 100,                                                                
@@ -40,8 +42,12 @@ app.get('/', (req, res) => {
 
 app.use('/v0/bridges/', require('./routes/bridge'));
 app.use('/v0/tntrun/', require('./routes/tntrun'));
-
+app.use('/v0/all/', require('./routes/all'));
 app.use('/v0/webhook/', require('./routes/webhooks'));
+
+hahaFunnyUrl.forEach(function(key) {
+  app.get(key, (req, res) => {res.redirect("https://www.youtube.com/watch?v=dQw4w9WgXcQ")})
+})
 
 /////////////////////////
 //  HTTP SERVER START  //
