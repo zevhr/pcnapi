@@ -12,8 +12,6 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const rateLimit = require('express-rate-limit');
-const morgan = require('morgan');
-require('dotenv').config;
 
 const rate = rateLimit({                                                                                              
   windowMs: 60 * 60 * 1000,                                                                  
@@ -30,7 +28,6 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.json());
 app.use(cors());
-app.use(morgan('combined'))
 app.use(rate);
 
 ///////////////////
@@ -52,4 +49,4 @@ app.use('/v0/webhook/', require('./routes/webhooks'));
 
 app.listen(1337, () => {
   console.log(`Done! Started on port 1337.`)
-})   
+})
