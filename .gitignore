@@ -3,4 +3,3 @@ src/modules/db.ts
 config.json
 src/images
 dist
-old
