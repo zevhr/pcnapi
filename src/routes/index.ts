@@ -1,9 +1,17 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
+import { createClient } from 'redis';
 import { query } from '../modules/db';
-import fetch from 'node-fetch';
 import { createCanvas, loadImage } from 'canvas';
+
+const redisClient = createClient();
+redisClient.connect();
+
+let obj = {};
+redisClient.subscribe("gamed", (message) => {
+    obj = JSON.parse(message);
+});
 
 // Canvas Config
 const width = 728
@@ -128,5 +136,9 @@ export const register = (app: express.Application) => {
         const buffer = canvas.toBuffer('image/png');
         fs.writeFileSync(path.resolve(__dirname, `../images/${req.params.username.toLowerCase()}.png`), buffer);
         res.sendFile(path.join(__dirname, `../images/${req.params.username.toLowerCase()}.png`));
+    })
+
+    app.get("/games/:username/_realtime/tntrun", async (req, res) => {
+        return res.status(200).json(obj);
     })
 }
