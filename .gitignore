@@ -1,5 +1,4 @@
 node_modules
-src/modules/db.ts
 config.json
 src/images
 dist
