@@ -1,16 +1,16 @@
 import express from 'express';
 import fetch from 'node-fetch';
 import config from './config.json';
-import * as routes from './routes';
+import bodyParser from 'body-parser';
+import { routes } from './routes';
 
 const app = express();
-routes.register(app);
-
 app.use(express.json());
 
 app.set('view engine', 'ejs');
 app.set('views', './src/views');
 
+app.use('/', routes);
 app.get('*', (req, res) => {
     return res.status(404).json({"status":404,"message":"The server cannot access that resource or it is missing. If this resource is intended to exist, please reach out to the app maintainer."});
 })
