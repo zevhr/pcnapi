@@ -19,18 +19,22 @@ bridgesRoute.get('/bridges', async (req, res) => {
         const itemData = await query("SELECT * FROM bridgesItems where player=?", [req.query.username]);
         if (data.length === 0) return res.status(404).json({"status":404,"message":"That user doesn't exist in the database."});
 
+        const image = await generateImage(req.query.username)
         const user = {
             "kills": data[0].kills,
             "points": data[0].points,
+            "hotbarImage":"",
             "itemData": {
-                "sword": itemData[0].sword,
-                "bow": itemData[0].bow,
-                "concrete1": itemData[0].concrete1,
-                "concrete2": itemData[0].concrete2,
-                "gap": itemData[0].gap,
-                "pickaxe": itemData[0].pickaxe
+                "sword": Math.round(parseInt(itemData[0].sword, 10) + 1),
+                "bow": Math.round(parseInt(itemData[0].bow, 10) + 1),
+                "concrete1": Math.round(parseInt(itemData[0].concrete1, 10) + 1),
+                "concrete2": Math.round(parseInt(itemData[0].concrete2, 10) + 1),
+                "gap": Math.round(parseInt(itemData[0].gap, 10) + 1),
+                "pickaxe": Math.round(parseInt(itemData[0].pickaxe, 10) + 1)
             }
         }
+
+        if (image) user.hotbarImage = image;
 
         return res.status(200).json({"status":200,"username":req.query.username,user});
 })
@@ -48,10 +52,24 @@ bridgesRoute.get('/bridges/history', async (req, res) => {
     return res.status(200).json({"status":200,"games":th});
 })
 
-bridgesRoute.get('/bridges/image', async (req, res) => {
-    if (!req.query.username) return res.status(400).json({"status":400,"message":"No username query parameter provided"});
-    const itemData = await query("SELECT * FROM bridgesItems where player=?", [req.query.username]);
-    if(itemData.length === 0) return res.status(404).json({"status":404,"message":"That user doesn't exist in the database."});
+bridgesRoute.post("/bridges/itemData", async (req, res) => {
+    if (!req.body || !req.body.itemData || !req.body.user) return res.status(400).json({"status":400,"message":"No itemData or user object(s) provided"});
+
+    const body = req.body.itemData;
+    if (!body.sword || !body.concrete1 || !body.concrete2 || !body.pickaxe || !body.bow || !body.gap) return res.status(400).json({"status":400,"message":"An expected key is missing. Please check your object."})
+
+    const d = await query("SELECT * FROM bridgesItems WHERE player=?", [req.body.user])
+    if (!d[0]) {
+        return res.status(404).json({"status":404,"message":"User is not in database"})
+    } else {
+        query("UPDATE bridgesItems SET sword=?, concrete1=?, concrete2=?, pickaxe=?, bow=?, gap=? WHERE player=?", [body.sword, body.concrete1, body.concrete2, body.pickaxe, body.bow, body.gap, req.body.user]);
+        return res.status(200).json({"status":200,"message":"Table successfully updated"});
+    }
+})
+
+async function generateImage(ign) {
+    const itemData = await query("SELECT * FROM bridgesItems where player=?", [ign]);
+    if(itemData.length === 0) return false;
 
     const images = [];
     images.push(await loadImage(path.resolve(__dirname, '../images/hotbar.png')));
@@ -98,26 +116,5 @@ bridgesRoute.get('/bridges/image', async (req, res) => {
     // Pickaxe
     context.drawImage(images[5], x[itemData[0].pickaxe], 92, 50, 50);
 
-    const buffer = canvas.toBuffer('image/png');
-    fs.writeFileSync(path.resolve(__dirname, `../images/${req.query.username.toLowerCase()}.png`), buffer);
-    res.sendFile(path.join(__dirname, `../images/${req.query.username.toLowerCase()}.png`));
-})
-
-bridgesRoute.post("/bridges/itemData", async (req, res) => {
-    console.log(req.body)
-    if (!req.body || !req.body.itemData || !req.body.user) return res.status(400).json({"status":400,"message":"No itemData or user object(s) provided"});
-
-    const body = req.body.itemData;
-    if (!body.sword || !body.concrete1 || !body.concrete2 || !body.pickaxe || !body.bow || !body.gap) return res.status(400).json({"status":400,"message":"An expected key is missing. Please check your object."})
-    Object.keys(body).forEach(async (key, value) => {
-        if (value > 8) return res.status(400).json({"status":400,"message":"Slot value cannot be greater than 8 (with first index as 0)"});
-    })
-
-    const d = await query("SELECT * FROM bridgesItems WHERE player=?", [req.body.user])
-    if (d.length === 0) {
-        return res.json({"status":404,"message":"User is not in database"})
-    } else {
-        query("UPDATE bridgesItems SET sword=?, concrete1=?, concrete2=?, pickaxe=?, bow=?, gap=? WHERE player=?", [body.sword, body.concrete1, body.concrete2, body.pickaxe, body.bow, body.gap, req.body.user]);
-        return res.status(200).json({"status":200,"message":"Table successfully updated"});
-    }
-})
+    return canvas.toDataURL('image/png');
+}

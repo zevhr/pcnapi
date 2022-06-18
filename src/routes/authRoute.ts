@@ -16,6 +16,7 @@ authRoute.post('/auth', async (req, res) => {
     const key = await redisClient.get(req.query.ign);
 
     if (!key) return res.status(500).json({"status":500,"message":"Uh oh! There was no token created for that user."});
+    else if (key !== req.query.token) return res.status(401).json({"status":401,"message":"Invalid token provided"});
     else {
         redisClient.del(req.query.ign);
         query("INSERT INTO linked VALUES (?,?)", [req.query.ign, req.query.id]);
@@ -34,16 +35,15 @@ authRoute.delete('/auth', async (req, res) => {
 })
 
 authRoute.get('/auth/@me', async (req, res) => {
-    if (!req.query.ign) return res.status(400).json({"status":400,"message":"No user provided"});
-    await query("SELECT * FROM linked WHERE ign=?", [req.query.ign])
+    if (!req.query.id) return res.status(400).json({"status":400,"message":"No user provided"});
+    await query("SELECT * FROM linked WHERE id=?", [req.query.id])
     .then(async (d) => {
         if (d.length === 0) return res.status(404).json({"status":404,"message":"User is not linked to any account"});
 
         return res.status(200).json({
             "status":200,
             "user": {
-                "ign": req.query.ign,
-                "id": d[0].id
+                "ign": d[0].ign
             }
         })
     })

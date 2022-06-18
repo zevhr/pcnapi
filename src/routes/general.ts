@@ -12,6 +12,7 @@ generalRoute.get('/all', async (req, res) => {
     if (data.length === 0) return res.status(404).json({"status":404,"message":"That user doesn't exist in the database."});
 
     const user = {
+        "username":req.query.username,
         "bridges": {
             "kills": data[0].kills,
             "points": data[0].points,
@@ -28,6 +29,6 @@ generalRoute.get('/all', async (req, res) => {
         }
     }
 
-    return res.status(200).json({"status":200,"username":req.query.username,user});
+    return res.status(200).json({"status":200,user});
 })
 

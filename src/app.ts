@@ -1,7 +1,6 @@
 import express from 'express';
 import fetch from 'node-fetch';
 import config from './config.json';
-import bodyParser from 'body-parser';
 import { routes } from './routes';
 
 const app = express();

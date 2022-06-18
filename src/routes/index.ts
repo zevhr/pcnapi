@@ -8,6 +8,15 @@ import { pluginRoute } from './plugins';
 
 export const routes = express.Router();
 
+routes.get('/', (req, res) => {
+    return res.status(200).json({
+        "status": 200,
+        "appAuthor": "PlagueCraft Network Team",
+        "appDescription": "PlagueCraft REST API",
+        "appOwner": "Awex"
+    })
+})
+
 routes.use(bridgesRoute);
 routes.use(authRoute);
 routes.use(generalRoute);
