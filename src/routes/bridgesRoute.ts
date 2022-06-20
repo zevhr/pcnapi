@@ -67,7 +67,7 @@ bridgesRoute.post("/bridges/itemData", async (req, res) => {
     }
 })
 
-async function generateImage(ign) {
+export async function generateImage(ign) {
     const itemData = await query("SELECT * FROM bridgesItems where player=?", [ign]);
     if(itemData.length === 0) return false;
 

@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { Router } from 'express';
 import { query } from '../modules/db';
+import { generateImage } from './bridgesRoute';
 
 export const generalRoute = Router();
 
@@ -15,6 +16,7 @@ generalRoute.get('/all', async (req, res) => {
         "username":req.query.username,
         "bridges": {
             "kills": data[0].kills,
+            "hotbarImage": "",
             "points": data[0].points,
             "itemData": {
                 "bow": itemData[0].bow,
@@ -28,6 +30,9 @@ generalRoute.get('/all', async (req, res) => {
             "points": tdata[0].points
         }
     }
+
+    const image = await generateImage(req.query.username);
+    if (image) user.bridges.hotbarImage = image;
 
     return res.status(200).json({"status":200,user});
 })
