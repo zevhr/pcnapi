@@ -1,12 +1,9 @@
 // @ts-nocheck
 import { Router } from 'express';
 import { query } from '../modules/db';
-import { createClient } from 'redis';
+import { redisClient } from '../modules/redis';
 
 export const authRoute = Router();
-
-const redisClient = createClient();
-redisClient.connect();
 
 authRoute.post('/auth', async (req, res) => {
     if (!req.query.ign || !req.query.token || !req.query.id) return res.status(400).json({"status":400,"message":"No user or token provided."});

@@ -1,13 +1,10 @@
 // @ts-nocheck
 import { Router } from 'express';
 import { query } from '../modules/db';
-import { createClient } from 'redis';
+import { redisClient } from '../modules/redis';
 
-const redisClient = createClient();
-redisClient.connect();
-
-let tobj = {};
-let bobj = {};
+const tobj = {};
+const bobj = {};
 redisClient.subscribe("gametntrun", (message) => {
     tobj = JSON.parse(message);
 });
