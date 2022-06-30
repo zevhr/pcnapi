@@ -1,23 +1,62 @@
 {
-    "info": {
+  "info": {
       "description": "API for the PlagueCraft Generic Gambit",
       "title": "PCG-API",
       "version": "v1"
-    },
-    "openapi": "3.0.0",
-    "paths": {
-        "/bridges": {
-            "get": {
+  },
+  "openapi": "3.0.0",
+  "paths": {
+      "/bridges": {
+          "get": {
               "parameters": [
-                {
-                  "description": "",
-                  "in": "query",
-                  "name": "username",
-                  "required": true,
-                  "schema": {
-                    "type": "string"
+                  {
+                      "description": "",
+                      "in": "query",
+                      "name": "username",
+                      "required": true,
+                      "schema": {
+                          "type": "string"
+                      }
                   }
-                }
+              ],
+              "responses": {
+                  "200": {
+                      "description": "Successful"
+                  },
+                  "404": {
+                      "description": "User not found in database"
+                  },
+                  "500": {
+                      "description": "Internal Server Error"
+                  }
+              },
+              "summary": "Fetch game data for Bridges",
+              "tags": [
+                  "bridges"
+              ]
+          }
+      },
+      "/bridges/history": {
+          "get": {
+              "parameters": [
+                  {
+                      "description": "user to q for",
+                      "in": "query",
+                      "name": "user",
+                      "required": false,
+                      "schema": {
+                          "type": "string"
+                      }
+                  },
+                  {
+                      "description": "how many objects you want returned",
+                      "in": "query",
+                      "name": "limit",
+                      "required": false,
+                      "schema": {
+                          "type": "integer"
+                      }
+                  }
               ],
               "responses": {
                 "200": {
@@ -30,112 +69,162 @@
                     "description": "Internal Server Error"
                 }
               },
-              "summary": "Bridges real-time API",
+              "summary": "Fetch Bridges game history",
               "tags": [
-                "bridges"
+                  "bridges"
               ]
-            }
-          },
-      "/bridges/_realtime": {
-        "get": {
-          "responses": {
-            "200": {
-                "description": "Successful"
-              },
-              "500": {
-                  "description": "Internal Server Error"
-              }
-          },
-          "summary": "Bridges real-time API",
-          "tags": [
-            "bridges"
-          ]
-        }
-      },
-      "/bridges/history": {
-        "get": {
-          "parameters": [
-            {
-              "description": "",
-              "in": "query",
-              "name": "username",
-              "required": true,
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "successful operation"
-            }
-          },
-          "summary": "Fetch Bridges game history",
-          "tags": [
-            "bridges"
-          ]
-        }
+          }
       },
       "/tntrun": {
+          "get": {
+              "parameters": [
+                  {
+                      "description": "",
+                      "in": "query",
+                      "name": "username",
+                      "required": true,
+                      "schema": {
+                          "type": "string"
+                      }
+                  }
+              ],
+              "responses": {
+                  "200": {
+                      "description": "Successful"
+                  },
+                  "404": {
+                      "description": "User not found in database"
+                  },
+                  "500": {
+                      "description": "Internal Server Error"
+                  }
+              },
+              "summary": "Fetch player data for TNTRUN",
+              "tags": [
+                  "tntrun"
+              ]
+          }
+      },
+      "/parkour": {
         "get": {
-          "parameters": [
+            "parameters": [
+                {
+                    "description": "",
+                    "in": "query",
+                    "name": "username",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Successful"
+                },
+                "404": {
+                    "description": "User not found in database"
+                },
+                "500": {
+                    "description": "Internal Server Error"
+                }
+            },
+            "summary": "Fetch player data for Parkour Gambit",
+            "tags": [
+                "parkour"
+            ]
+        }
+    },
+      "/parkour/history": {
+        "get": {
+            "parameters": [
+              {
+                "description": "user to q for",
+                "in": "query",
+                "name": "user",
+                "required": false,
+                "schema": {
+                    "type": "string"
+                }
+            },
             {
-              "description": "",
-              "in": "query",
-              "name": "username",
-              "required": true,
-              "schema": {
-                "type": "string"
-              }
+                "description": "how many objects you want returned",
+                "in": "query",
+                "name": "limit",
+                "required": false,
+                "schema": {
+                    "type": "integer"
+                }
             }
           ],
-          "responses": {
-            "200": {
-              "description": "Successful"
+            "responses": {
+                "200": {
+                    "description": "Successful"
+                },
+                "500": {
+                    "description": "Internal Server Error"
+                }
             },
-            "404": {
-                "description": "User not found in database"
-            },
-            "500": {
-                "description": "Internal Server Error"
-            }
-          },
-          "summary": "Fetch player data",
-          "tags": [
-            "tntrun"
-          ]
+            "summary": "Fetch Parkour Gambit game history",
+            "tags": [
+                "parkour"
+            ]
         }
-      },
-      "/tntrun/_realtime": {
-        "get": {
-          "responses": {
-            "200": {
-                "description": "Successful"
-              },
-              "500": {
-                  "description": "Internal Server Error"
-              }
-          },
-          "summary": "TNTRUN real-time API",
-          "tags": [
-            "tntrun"
-          ]
-        }
-      }
     },
-    "servers": [
-      {
-        "url": "https://api.plaguecraft.xyz"
+      "/tntrun/history": {
+          "get": {
+              "parameters": [
+                {
+                  "description": "user to q for",
+                  "in": "query",
+                  "name": "user",
+                  "required": false,
+                  "schema": {
+                      "type": "string"
+                  }
+              },
+              {
+                  "description": "how many objects you want returned",
+                  "in": "query",
+                  "name": "limit",
+                  "required": false,
+                  "schema": {
+                      "type": "integer"
+                  }
+              }
+            ],
+              "responses": {
+                  "200": {
+                      "description": "Successful"
+                  },
+                  "500": {
+                      "description": "Internal Server Error"
+                  }
+              },
+              "summary": "Fetch TNTRUN game history",
+              "tags": [
+                  "tntrun"
+              ]
+          }
       }
-    ],
-    "tags": [
+  },
+  "servers": [
       {
-        "description": "",
-        "name": "tntrun"
+          "url": "https://api.plaguecraft.xyz"
+      }
+  ],
+  "tags": [
+      {
+          "description": "",
+          "name": "tntrun"
+      },
+      {
+          "description": "",
+          "name": "bridges"
       },
       {
         "description": "",
-        "name": "bridges"
+        "name": "parkour"
       }
-    ]
-  }
+  ]
+}

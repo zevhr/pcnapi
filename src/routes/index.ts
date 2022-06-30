@@ -1,8 +1,6 @@
 import express from 'express';
-import { bridgesRoute } from './bridgesRoute';
+import { minigameRouter } from './minigames';
 import { authRoute } from './authRoute';
-import { tntrunRoute } from './tntrunRoute';
-import { generalRoute } from './general';
 import { realtimeRouter } from './realtime';
 import { pluginRoute } from './plugins';
 
@@ -17,9 +15,7 @@ routes.get('/', (req, res) => {
     })
 })
 
-routes.use(bridgesRoute);
+routes.use(minigameRouter);
 routes.use(authRoute);
-routes.use(generalRoute);
-routes.use(tntrunRoute);
 routes.use(realtimeRouter);
 routes.use(pluginRoute);

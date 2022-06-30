@@ -1,8 +1,9 @@
 import express from 'express';
 import fetch from 'node-fetch';
 import config from './config.json';
+import path from 'path';
 import swags from 'swagger-ui-express';
-import swagDoc from './swagger.json';
+import swagsDoc from './swagger.json';
 import { routes } from './routes';
 
 const app = express();
@@ -11,7 +12,7 @@ app.use(express.json());
 app.set('view engine', 'ejs');
 app.set('views', './src/views');
 
-app.use('/docs', swags.serve, swags.setup(swagDoc));
+app.use('/docs', swags.serve, swags.setup(swagsDoc));
 app.use('/', routes);
 app.get('*', (req, res) => {
     return res.status(404).json({"status":404,"message":"The server cannot access that resource or it is missing. If this resource is intended to exist, please reach out to the app maintainer."});
