@@ -161,8 +161,11 @@
                 "200": {
                     "description": "Successful"
                 },
+                "404": {
+                    "description": "Plugin not found"
+                },
                 "500": {
-                    "description": "Internal Server Error"
+                    "description": "GitHub returned unexpected error"
                 }
             },
             "summary": "Fetch Parkour Gambit game history",
@@ -206,11 +209,38 @@
                   "tntrun"
               ]
           }
-      }
+      },
+      "/plugins/{plugin}": {
+        "get": {
+            "parameters": [
+              {
+                "description": "plugin to search for",
+                "in": "path",
+                "name": "plugin",
+                "required": true,
+                "schema": {
+                    "type": "string"
+                }
+            }
+          ],
+            "responses": {
+                "200": {
+                    "description": "Successful"
+                },
+                "500": {
+                    "description": "Internal Server Error"
+                }
+            },
+            "summary": "Fetch latest plugin version",
+            "tags": [
+                "plugin"
+            ]
+        }
+    }
   },
   "servers": [
       {
-          "url": "https://api.plaguecraft.xyz"
+          "url": "https://services.plaguecraft.xyz"
       }
   ],
   "tags": [
@@ -225,6 +255,10 @@
       {
         "description": "",
         "name": "parkour"
+      },
+      {
+        "description": "",
+        "name": "plugin"
       }
   ]
 }
