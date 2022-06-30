@@ -7,21 +7,21 @@ const wss = new WebSocketServer.Server({ port:8081 });
 wss.on("connection", ws => {
     ws.on("message", (message) => {
         if (message.toString() === "bridges") {
-            ws.send("Subscribed to bridges!")
+            ws.send(1000)
             redisClient.subscribe("gamebridges", (msg) => {
                 ws.send(msg);
             })
         } else if (message.toString() === "tntrun") {
-            ws.send("Subscribed to TNTRUN!")
+            ws.send(1000)
             redisClient.subscribe("gametntrun", (msg) => {
                 ws.send(msg)
             });
         } else if (message.toString() === "parkour") {
-            ws.send("Subscribed to parkour!")
+            ws.send(1000)
             redisClient.subscribe("gameparkour", (msg) => {
                 ws.send(msg)
             })
-        }
+        } else return ws.send("1003");
     })
 })
 
