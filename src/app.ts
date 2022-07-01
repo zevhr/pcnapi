@@ -5,8 +5,6 @@ import config from './config.json';
 import swags from 'swagger-ui-express';
 import swagsDoc from './swagger.json';
 import { routes } from './routes';
-import { redisClient } from './modules/redis';
-import { init } from './routes/realtime';
 
 const app = express();
 app.use(express.json());
@@ -20,17 +18,19 @@ app.get('*', (req, res) => {
     return res.status(404).json({"status":404,"message":"The server cannot access that resource or it is missing. If this resource is intended to exist, please reach out to the app maintainer."});
 })
 
-if (config.debug) {
-    app.listen(config.port, () => {
-        console.log("Dev API Online")
-        init(app);
+app.listen(config.port, () => {
+    fetch(config.webhook, {
+        method: 'post',
+        headers: {
+            'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+            "content": "REST API Successfully compiled & started on port " + config.port + "\n" + JSON.stringify({
+                "status": "ok",
+                "appAuthor": "PlagueCraft Network Team",
+                "appDescription": "PlagueCraft REST API",
+                "appOwner": "Awex"
+            })
+        })
     })
-} else {
-    let httpsServer = https.createServer({ cert: config.ssl.cert, key: config.ssl.privkey });
-
-    app.listen(config.port, () => {
-        console.log("Dev API Online")
-        init(app);
-    })
-    init(httpsServer);
-}
+})
